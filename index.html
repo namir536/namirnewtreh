@@ -62,7 +62,7 @@
 <div class="card">
   <h1>Намир Групп</h1>
   <p class="subtitle">Сургалтын системд нэвтрэх</p>
-
+ 
   <button class="ms-btn" onclick="login()">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21">
       <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -72,17 +72,17 @@
     </svg>
     Microsoft акаунтаар нэвтрэх
   </button>
-
+ 
   <div class="loading" id="loading">⏳ Нэвтэрч байна...</div>
   <div class="error" id="error"></div>
   <div class="footer">Намир Групп © 2026</div>
 </div>
-
+ 
 <script>
 const CLIENT_ID  = "5e1907e1-bb7d-4fca-a25e-eae236abd290";
 const TENANT_ID  = "97db511a-8405-4054-8686-b2ee778939d6";
 const REDIRECT   = "https://namir536.github.io/Namir/";
-
+ 
 const branchMap = {
   "novatek.mn"       : "engineering",
   "domus.mn"         : "engineering",
@@ -105,7 +105,7 @@ const branchMap = {
   "snowball.am"      : "namir",
   "blackswan.global" : "namir"
 };
-
+ 
 // JWT decode - email авах
 function parseJwt(token) {
   try {
@@ -115,18 +115,18 @@ function parseJwt(token) {
     return JSON.parse(json);
   } catch(e) { return null; }
 }
-
+ 
 // Microsoft-аас буцаж ирсэн token шалгах
 function checkToken() {
   const hash = window.location.hash.substring(1);
   if (!hash) return;
-
+ 
   const params = {};
   hash.split('&').forEach(p => {
     const [k, v] = p.split('=');
     params[k] = decodeURIComponent(v);
   });
-
+ 
   if (params.id_token) {
     document.getElementById("loading").style.display = "block";
     const payload = parseJwt(params.id_token);
@@ -134,33 +134,33 @@ function checkToken() {
       showError("Token уншихад алдаа гарлаа.");
       return;
     }
-
+ 
     const email = (payload.preferred_username || payload.email || "").toLowerCase();
     const domain = email.split("@")[1];
     const branch = branchMap[domain];
-
+ 
     if (branch) {
       window.location.href = "https://" + branch + "-namirgroup.talentlms.com/index/login/sso:1";
     } else {
       document.getElementById("loading").style.display = "none";
       showError("Домэйн танигдсангүй: " + domain + ". Удирдлагатайгаа холбоо барина уу.");
     }
-
+ 
     // Hash цэвэрлэх
     history.replaceState(null, '', window.location.pathname);
   }
-
+ 
   if (params.error) {
     showError("Алдаа: " + (params.error_description || params.error));
   }
 }
-
+ 
 function showError(msg) {
   const err = document.getElementById("error");
   err.textContent = msg;
   err.style.display = "block";
 }
-
+ 
 function login() {
   const url = "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/authorize" +
     "?client_id=" + CLIENT_ID +
@@ -171,7 +171,7 @@ function login() {
     "&nonce=" + Math.random().toString(36).substring(2);
   window.location.href = url;
 }
-
+ 
 // Хуудас ачаалагдахад token шалгах
 checkToken();
 </script>
