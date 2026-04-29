@@ -140,7 +140,7 @@ function checkToken() {
     const branch = branchMap[domain];
  
     if (branch) {
-      window.location.href = "https://" + branch + "-namirgroup.talentlms.com/index/login/sso:1";
+      window.location.href = "https://" + branch + "-namirgroup.talentlms.com";
     } else {
       document.getElementById("loading").style.display = "none";
       showError("Домэйн танигдсангүй: " + domain + ". Удирдлагатайгаа холбоо барина уу.");
