@@ -81,8 +81,7 @@
 <script>
 const CLIENT_ID = "5e1907e1-bb7d-4fca-a25e-eae236abd290";
 const TENANT_ID = "97db511a-8405-4054-8686-b2ee778939d6";
-// Azure-д бүртгэлтэй URI-тай яг таарч байна
-const REDIRECT  = "https://namir536.github.io/namirnewtreh/";
+const REDIRECT  = "https://namir536.github.io/namirnewtreh/";  // ✅ Засагдсан
  
 const branchMap = {
   "novatek.mn"       : "engineering",
@@ -150,7 +149,7 @@ function checkToken() {
     history.replaceState(null, '', window.location.pathname);
  
     if (branch) {
-      window.location.href = "https://" + branch + "-namirgroup.talentlms.com";
+      window.location.href = "https://" + branch + "-namirgroup.talentlms.com";  // ✅ Засагдсан
     } else {
       showError("Домэйн танигдсангүй: " + domain + ". Удирдлагатайгаа холбоо барина уу.");
     }
