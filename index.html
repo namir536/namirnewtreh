@@ -79,9 +79,10 @@
 </div>
  
 <script>
-const CLIENT_ID  = "5e1907e1-bb7d-4fca-a25e-eae236abd290";
-const TENANT_ID  = "97db511a-8405-4054-8686-b2ee778939d6";
-const REDIRECT   = "https://namir536.github.io/namirnewtreh/";
+const CLIENT_ID = "5e1907e1-bb7d-4fca-a25e-eae236abd290";
+const TENANT_ID = "97db511a-8405-4054-8686-b2ee778939d6";
+// Azure-д бүртгэлтэй URI-тай яг таарч байна
+const REDIRECT  = "https://namir536.github.io/namirnewtreh/";
  
 const branchMap = {
   "novatek.mn"       : "engineering",
@@ -106,7 +107,6 @@ const branchMap = {
   "blackswan.global" : "namir"
 };
  
-// JWT decode - email авах
 function parseJwt(token) {
   try {
     const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -116,7 +116,13 @@ function parseJwt(token) {
   } catch(e) { return null; }
 }
  
-// Microsoft-аас буцаж ирсэн token шалгах
+function showError(msg) {
+  document.getElementById("loading").style.display = "none";
+  const err = document.getElementById("error");
+  err.textContent = msg;
+  err.style.display = "block";
+}
+ 
 function checkToken() {
   const hash = window.location.hash.substring(1);
   if (!hash) return;
@@ -124,55 +130,44 @@ function checkToken() {
   const params = {};
   hash.split('&').forEach(p => {
     const [k, v] = p.split('=');
-    params[k] = decodeURIComponent(v);
+    params[k] = decodeURIComponent(v || '');
   });
+ 
+  if (params.error) {
+    showError("Алдаа: " + (params.error_description || params.error));
+    return;
+  }
  
   if (params.id_token) {
     document.getElementById("loading").style.display = "block";
     const payload = parseJwt(params.id_token);
-    if (!payload) {
-      showError("Token уншихад алдаа гарлаа.");
-      return;
-    }
+    if (!payload) { showError("Token уншихад алдаа гарлаа."); return; }
  
-    const email = (payload.preferred_username || payload.email || "").toLowerCase();
+    const email = (payload.preferred_username || payload.upn || payload.email || "").toLowerCase();
     const domain = email.split("@")[1];
     const branch = branchMap[domain];
+ 
+    history.replaceState(null, '', window.location.pathname);
  
     if (branch) {
       window.location.href = "https://" + branch + "-namirgroup.talentlms.com";
     } else {
-      document.getElementById("loading").style.display = "none";
       showError("Домэйн танигдсангүй: " + domain + ". Удирдлагатайгаа холбоо барина уу.");
     }
- 
-    // Hash цэвэрлэх
-    history.replaceState(null, '', window.location.pathname);
   }
- 
-  if (params.error) {
-    showError("Алдаа: " + (params.error_description || params.error));
-  }
-}
- 
-function showError(msg) {
-  const err = document.getElementById("error");
-  err.textContent = msg;
-  err.style.display = "block";
 }
  
 function login() {
-  const url = "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/authorize" +
-    "?client_id=" + CLIENT_ID +
-    "&response_type=id_token" +
-    "&redirect_uri=" + encodeURIComponent(REDIRECT) +
-    "&scope=openid%20profile%20email" +
-    "&response_mode=fragment" +
-    "&nonce=" + Math.random().toString(36).substring(2);
+  const url = "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/authorize"
+    + "?client_id=" + CLIENT_ID
+    + "&response_type=id_token"
+    + "&redirect_uri=" + encodeURIComponent(REDIRECT)
+    + "&scope=openid%20profile%20email"
+    + "&response_mode=fragment"
+    + "&nonce=" + Math.random().toString(36).substring(2);
   window.location.href = url;
 }
  
-// Хуудас ачаалагдахад token шалгах
 checkToken();
 </script>
 </body>
