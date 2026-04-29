@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Намир Групп — Сургалтын систем</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; }
+  .subtitle { font-size: 14px; color: #666; margin-top: 4px; margin-bottom: 32px; }
+  .ms-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+  .ms-btn:hover { background: #006cbd; }
+  .ms-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .loading { display: none; margin-top: 20px; font-size: 14px; color: #666; }
+  .error {
+    display: none;
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: #fff0f0;
+    border: 1px solid #ffcccc;
+    border-radius: 8px;
+    color: #cc0000;
+    font-size: 14px;
+    text-align: left;
+  }
+  .footer { margin-top: 32px; font-size: 12px; color: #999; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Намир Групп</h1>
+  <p class="subtitle">Сургалтын системд нэвтрэх</p>
+
+  <button class="ms-btn" onclick="login()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21">
+      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+    </svg>
+    Microsoft акаунтаар нэвтрэх
+  </button>
+
+  <div class="loading" id="loading">⏳ Нэвтэрч байна...</div>
+  <div class="error" id="error"></div>
+  <div class="footer">Намир Групп © 2026</div>
+</div>
+
+<script>
+const CLIENT_ID  = "5e1907e1-bb7d-4fca-a25e-eae236abd290";
+const TENANT_ID  = "97db511a-8405-4054-8686-b2ee778939d6";
+const REDIRECT   = "https://namir536.github.io/Namir/";
+
+const branchMap = {
+  "novatek.mn"       : "engineering",
+  "domus.mn"         : "engineering",
+  "sigma3.mn"        : "engineering",
+  "cablehouse.mn"    : "engineering",
+  "numur.mn"         : "financial",
+  "leasing.numur.mn" : "financial",
+  "drillex.mn"       : "industrial",
+  "kemex.mn"         : "industrial",
+  "mekhlopat.mn"     : "industrial1",
+  "unitedparts.mn"   : "industrial1",
+  "kms.mn"           : "industrial1",
+  "bavariamotors.mn" : "mobilityandlifestyle",
+  "gangantogos.mn"   : "mobilityandlifestyle1",
+  "unicom.mn"        : "mobilityandlifestyle2u",
+  "ayangastore.mn"   : "mobilityandlifestyle2u",
+  "namir.mn"         : "namir",
+  "snowball.mn"      : "namir",
+  "k2.international" : "namir",
+  "snowball.am"      : "namir",
+  "blackswan.global" : "namir"
+};
+
+// JWT decode - email авах
+function parseJwt(token) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(atob(base64).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(json);
+  } catch(e) { return null; }
+}
+
+// Microsoft-аас буцаж ирсэн token шалгах
+function checkToken() {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return;
+
+  const params = {};
+  hash.split('&').forEach(p => {
+    const [k, v] = p.split('=');
+    params[k] = decodeURIComponent(v);
+  });
+
+  if (params.id_token) {
+    document.getElementById("loading").style.display = "block";
+    const payload = parseJwt(params.id_token);
+    if (!payload) {
+      showError("Token уншихад алдаа гарлаа.");
+      return;
+    }
+
+    const email = (payload.preferred_username || payload.email || "").toLowerCase();
+    const domain = email.split("@")[1];
+    const branch = branchMap[domain];
+
+    if (branch) {
+      window.location.href = "https://" + branch + "-namirgroup.talentlms.com/index/login/sso:1";
+    } else {
+      document.getElementById("loading").style.display = "none";
+      showError("Домэйн танигдсангүй: " + domain + ". Удирдлагатайгаа холбоо барина уу.");
+    }
+
+    // Hash цэвэрлэх
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  if (params.error) {
+    showError("Алдаа: " + (params.error_description || params.error));
+  }
+}
+
+function showError(msg) {
+  const err = document.getElementById("error");
+  err.textContent = msg;
+  err.style.display = "block";
+}
+
+function login() {
+  const url = "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/authorize" +
+    "?client_id=" + CLIENT_ID +
+    "&response_type=id_token" +
+    "&redirect_uri=" + encodeURIComponent(REDIRECT) +
+    "&scope=openid%20profile%20email" +
+    "&response_mode=fragment" +
+    "&nonce=" + Math.random().toString(36).substring(2);
+  window.location.href = url;
+}
+
+// Хуудас ачаалагдахад token шалгах
+checkToken();
+</script>
+</body>
+</html>
